@@ -10,20 +10,18 @@ serverPort = 8080
 
 class MyServer(BaseHTTPRequestHandler):
     def do_POST(self):
-        if self.path == '/image':
-            self.do_image()
-        else:
-            print("got post!!")
-            content_len = int(self.headers.get('content-length', 0))
-            post_body = self.rfile.read(content_len)
-            test_data = simplejson.loads(post_body)
-            print("post_body(%s)" % (test_data))
+        print("got post!!")
+        content_len = int(self.headers.get('content-length', 0))
+        post_body = self.rfile.read(content_len)
+        test_data = simplejson.loads(post_body)
+        print("post_body(%s)" % (test_data))
 
-            with open("imageToSave.jpg", "wb") as fh:
-                fh.write(base64.urlsafe_b64decode(test_data['image']))
+        with open("imageToSave.jpg", "wb") as fh:
+            fh.write(base64.urlsafe_b64decode(test_data['image']))
 
-            in_register = False
+        in_register = False
 
+        try:
             unknown_image = face_recognition.load_image_file("imageToSave.jpg")
             unknown_encoding = face_recognition.face_encodings(unknown_image)[0]
 
@@ -46,22 +44,15 @@ class MyServer(BaseHTTPRequestHandler):
                 self.wfile.write(bytes("Registered","utf-8"))
             else:
                 self.wfile.write(bytes("Not Registered","utf-8"))
-            
-
-    def do_GET(self):
-        if self.path == '':
+        except:
+            in_register=False
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self.wfile.write(bytes("Hello","utf-8"))
-
-        else:
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-            self.wfile.write(bytes("Hello", "utf-8"))
-
-
+            if in_register:
+                self.wfile.write(bytes("Registered","utf-8"))
+            else:
+                self.wfile.write(bytes("Not Registered","utf-8"))
 
 
 if __name__ == "__main__":        
